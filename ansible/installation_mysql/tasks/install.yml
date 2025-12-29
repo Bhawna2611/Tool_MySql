@@ -1,0 +1,14 @@
+---
+- name: Install MySQL on Debian/Ubuntu
+  apt:
+    name: "mysql-server-{{ mysql_version }}"
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Install MySQL on RedHat/CentOS
+  yum:
+    name: "mysql-community-server"
+    state: present
+  when: ansible_os_family == "RedHat"
+

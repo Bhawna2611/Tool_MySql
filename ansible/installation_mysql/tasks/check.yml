@@ -1,0 +1,20 @@
+---
+
+- name: Check if MySQL is installed
+  #  command: mysql --version
+  shell: which mysql
+  # package_facts:
+  failed_when: false
+
+  register: mysql_check
+  ignore_errors: yes
+
+- name: Display MySQL check result
+  debug:
+    msg: >
+      {% if mysql_check.rc == 0 %}
+        MySQL is installed: {{ mysql_check.stdout }}
+      {% else %}
+        MySQL is NOT installed
+      {% endif %}
+

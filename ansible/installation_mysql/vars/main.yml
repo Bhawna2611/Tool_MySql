@@ -1,0 +1,40 @@
+---
+
+allowed_mysql_actions:
+  - install
+  - uninstall
+  - check
+
+allowed_mysql_versions:
+  - "8.0"
+  - "8.1"
+
+# Debian / Ubuntu Packages
+debian_mysql_versions:
+  "8.1": "mysql-server"
+  "8.0": "mysql-server-8.0"
+
+# RHEL / CentOS repo + package
+redhat_repo_pkg:
+  "5.7": "https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm"
+  "8.0": "https://dev.mysql.com/get/mysql80-community-release-el7-7.noarch.rpm"
+
+redhat_pkg: "mysql-community-server"
+
+# Amazon Linux Packages
+amazon_pkg:
+  "5.7": "mysql57-server"
+  "8.0": "mysql80-server"
+
+# ---- Added mysql_packages mapping ----
+mysql_packages:
+  Debian:
+    "5.7": "{{ debian_mysql_versions['5.7'] }}"
+    "8.0": "{{ debian_mysql_versions['8.0'] }}"
+  RedHat:
+    "5.7": "{{ redhat_pkg }}"
+    "8.0": "{{ redhat_pkg }}"
+  Amazon:
+    "5.7": "{{ amazon_pkg['5.7'] }}"
+    "8.0": "{{ amazon_pkg['8.0'] }}"
+

@@ -1,0 +1,18 @@
+---
+- name: Validate action
+  fail:
+    msg: "Invalid action. Use install, uninstall, or check"
+  when: mysql_action is not defined or mysql_action not in ['install', 'uninstall', 'check']
+
+- name: Include CHECK tasks
+  include_tasks: check.yml
+  when: mysql_action == 'check'
+
+- name: Include INSTALL tasks
+  include_tasks: install.yml
+  when: mysql_action == 'install'
+
+- name: Include UNINSTALL tasks
+  include_tasks: uninstall.yml
+  when: mysql_action == 'uninstall'
+

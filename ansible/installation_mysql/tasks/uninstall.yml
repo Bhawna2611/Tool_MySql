@@ -1,0 +1,80 @@
+---
+# tasks/uninstall.yml
+
+- name: Gather service facts
+  service_facts:
+
+# ---------------- STOP SERVICES ----------------
+- name: Stop MySQL service on Debian/Ubuntu if it exists
+  service:
+    name: mysql
+    state: stopped
+  when:
+    - ansible_os_family == "Debian"
+    - "'mysql.service' in ansible_facts.services or 'mysql' in ansible_facts.services"
+
+- name: Stop MySQL service on RedHat/CentOS if it exists
+  service:
+    name: mysqld
+    state: stopped
+  when:
+    - ansible_os_family == "RedHat"
+    - "'mysqld.service' in ansible_facts.services or 'mysqld' in ansible_facts.services"
+
+- name: Stop MySQL service on Amazon Linux if it exists
+  service:
+    name: mysqld
+    state: stopped
+  when:
+    - ansible_os_family == "Amazon"
+    - "'mysqld.service' in ansible_facts.services or 'mysqld' in ansible_facts.services"
+
+# ---------------- UNINSTALL MYSQL ----------------
+# Debian / Ubuntu
+- name: Uninstall MySQL server on Debian/Ubuntu
+  apt:
+    name: "{{ mysql_packages['Debian'][mysql_version] }}"
+    state: absent
+    purge: yes
+  when: ansible_os_family == "Debian"
+
+- name: Uninstall MySQL client on Debian/Ubuntu
+  apt:
+    name: "mysql-client-{{ mysql_version }}"
+    state: absent
+    purge: yes
+  when: ansible_os_family == "Debian"
+
+- name: Remove leftover MySQL packages on Debian/Ubuntu
+  apt:
+    name:
+      - mysql-common
+      - "mysql-client-core-{{ mysql_version }}"
+    state: absent
+    purge: yes
+  when: ansible_os_family == "Debian"
+
+# RedHat / CentOS
+- name: Uninstall MySQL on RedHat/CentOS
+  yum:
+    name: "{{ mysql_packages['RedHat'][mysql_version] }}"
+    state: absent
+  when: ansible_os_family == "RedHat"
+
+# Amazon Linux
+- name: Uninstall MySQL on Amazon Linux
+  yum:
+    name: "{{ mysql_packages['Amazon'][mysql_version] }}"
+    state: absent
+  when: ansible_os_family == "Amazon"
+
+# ---------------- CONFIRM REMOVAL ----------------
+
+- name: Show removal status
+  debug:
+    msg: mysql removed
+
+
+
+
+

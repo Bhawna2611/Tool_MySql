@@ -1,0 +1,4 @@
+---
+# defaults file for installation_mysql
+mysql_version: "8.0"
+mysql_action: "install"   # install | uninstall | check
