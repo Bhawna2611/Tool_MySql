@@ -22,7 +22,7 @@ pipeline {
             steps {
                 echo "Fetching code from GitHub..."
                 // URL ADDED HERE
-                git branch: 'main', 
+                git branch: 'local', 
                     url: ' https://github.com/Bhawna2611/Tool_MySql.git'
             }
         }
@@ -45,7 +45,7 @@ pipeline {
         stage('Execute MySQL Role') {
             steps {
                 sh """
-                    ansible-playbook -i inventory.ini playbook.yml \
+                    ansible-playbook -i ansible/inventory.ini ansible/playbook.yml 
                     -e "mysql_action=${params.ACTION}" \
                     -e "mysql_version=${params.VERSION}" \
                     --private-key ${SSH_KEY}
