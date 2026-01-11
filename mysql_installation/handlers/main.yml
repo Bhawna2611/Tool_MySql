@@ -1,0 +1,10 @@
+---
+
+
+  
+# handlers/main.yml
+- name: restart
+  ansible.builtin.service:
+    # 'mysql' for Ubuntu, 'mysqld' for RedHat/Amazon Linux
+    name: "{{ 'mysql' if ansible_os_family == 'Debian' else 'mysqld' }}"
+    state: restarted

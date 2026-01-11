@@ -1,0 +1,51 @@
+---
+# Detect correct service name
+- name: Set MySQL service name based on OS
+  set_fact:
+    mysql_service_name: "{{ 'mysql' if ansible_os_family == 'Debian' else 'mysqld' }}"
+
+# Stop service safely
+- name: Stop MySQL Service if exists
+  service:
+    name: "{{ mysql_service_name }}"
+    state: stopped
+  ignore_errors: yes
+
+# ---------- Debian / Ubuntu Uninstall (Deep Clean) ----------
+- name: Remove MySQL Packages Debian
+  apt:
+    name:
+      - mysql-server*
+      - mysql-client*
+      - mysql-common
+      - mysql-community*
+      - libmysqlclient*
+    state: absent
+    purge: yes
+  when: ansible_os_family == "Debian"
+
+- name: Autoremove Debian dependencies
+  apt:
+    autoremove: yes
+    purge: yes
+  when: ansible_os_family == "Debian"
+
+# ---------- RHEL / Amazon Uninstall ----------
+- name: Remove MySQL Packages RedHat/Amazon
+  yum:
+    name: 
+      - mysql-community-server*
+      - mysql-community-client*
+      - mysql-common
+    state: absent
+  when: ansible_os_family == "RedHat" or ansible_distribution == "Amazon"
+
+# ---------- Remove Data and Config ----------
+- name: Remove MySQL Data and Config Directories
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /var/lib/mysql
+    - /etc/mysql
+    - /var/log/mysql

@@ -1,0 +1,33 @@
+---
+# 1. Check if MySQL binary exists
+- name: Check if MySQL binary exists
+  ansible.builtin.command: which mysql
+  register: mysql_binary
+  ignore_errors: yes
+  changed_when: false
+
+# 2. Capture the version or set a default message
+- name: Get MySQL Version
+  ansible.builtin.shell: mysql --version
+  register: mysql_v_out
+  when: mysql_binary.rc == 0
+  changed_when: false
+
+# 3. Print MySQL Version (Handles "Not Installed" gracefully)
+- name: Print MySQL Version
+  ansible.builtin.debug:
+    msg: "Installed Version: {{ mysql_v_out.stdout if (mysql_v_out.stdout is defined and mysql_v_out.stdout != '') else 'MySQL is NOT installed' }}"
+
+# 4. Gather system service facts
+- name: Populate service facts
+  ansible.builtin.service_facts:
+
+# 5. Show Service State with safer logic
+- name: Show Service State
+  ansible.builtin.debug:
+    msg: >
+      Service State: {{ 
+        ansible_facts.services['mysql.service'].state if (ansible_os_family == 'Debian' and 'mysql.service' in ansible_facts.services) 
+        else ansible_facts.services['mysqld.service'].state if (ansible_os_family == 'RedHat' and 'mysqld.service' in ansible_facts.services)
+        else 'Service not found/not running'
+      }}

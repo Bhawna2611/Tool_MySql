@@ -1,0 +1,41 @@
+---
+- name: "User Selected Action: {{ mysql_action }}"
+  ansible.builtin.debug:
+    msg: "Performing {{ mysql_action }} operation"
+
+- name: Set remote user dynamically
+  ansible.builtin.set_fact:
+    ansible_user: "{{ 'ubuntu' if ansible_os_family == 'Debian' else 'ec2-user' }}"
+
+- name: User check
+  ansible.builtin.debug:
+    msg: "Connecting as {{ ansible_user_id }} on {{ ansible_distribution }}"
+
+# 1. CHECK Logic (Hamesha chalega ya sirf check action par)
+- name: Include Check Logic
+  include_tasks: check.yml
+  when: mysql_action == "check" or mysql_action == "install"
+
+# 2. INSTALL Logic
+- name: Include Install Tasks
+  when: mysql_action == "install"
+  block:
+    - name: Debian Install
+      include_tasks: install_debian.yml
+      when: ansible_os_family == "Debian"
+
+    - name: RedHat Install
+      include_tasks: install_redhat.yml
+      when: ansible_os_family == "RedHat"
+
+# 3. UNINSTALL Logic
+- name: Include Uninstall Tasks
+  when: mysql_action == "uninstall"
+  block:
+    - name: Debian Uninstall
+      include_tasks: uninstall_debian.yml
+      when: ansible_os_family == "Debian"
+
+    - name: RedHat Uninstall
+      include_tasks: uninstall_redhat.yml
+      when: ansible_os_family == "RedHat"

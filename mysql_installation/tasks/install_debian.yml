@@ -1,0 +1,65 @@
+---
+# 1. Preparation: Remove any stale apt locks
+- name: Clean up apt locks and remove existing MySQL repository files
+  ansible.builtin.shell: |
+    rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock
+    rm -f /etc/apt/sources.list.d/mysql.list /etc/apt/sources.list.d/repo_mysql_com_apt_ubuntu.list
+    dpkg --configure -a
+  become: yes
+  changed_when: false
+
+# 2. Identify the currently installed version
+- name: Detect currently installed MySQL version
+  ansible.builtin.shell: mysql --version | grep -oE '[0-9]+\.[0-9]+' | head -1
+  register: installed_v
+  failed_when: false
+  changed_when: false
+
+# 3. Purge if version mismatch
+- name: Purge all MySQL packages if version mismatch exists
+  ansible.builtin.apt:
+    name: ["mysql-server*", "mysql-client*", "mysql-common", "mysql-community*", "libmysqlclient*"]
+    state: absent
+    purge: yes
+    autoremove: yes
+  when: installed_v.stdout != "" and mysql_version not in installed_v.stdout
+  become: yes
+
+# 4. Import MySQL GPG key
+- name: Import MySQL GPG key
+  ansible.builtin.apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: B7B3B788A8D3785C
+    state: present
+  become: yes # <--- Added
+
+# 5. Configure MySQL APT repository
+- name: Configure MySQL APT repository for version {{ mysql_version }}
+  ansible.builtin.apt_repository:
+    repo: "deb http://repo.mysql.com/apt/ubuntu {{ ansible_distribution_release }} mysql-{{ '8.0' if mysql_version == '8.0' else '8.4-lts' }}"
+    state: present
+    update_cache: yes
+    filename: mysql_ansible_repo
+  become: yes # <--- Added
+
+# 6. Final Installation
+- name: Install MySQL components
+  ansible.builtin.apt:
+    name:
+      - "mysql-server={{ mysql_version }}*"
+      - "mysql-client={{ mysql_version }}*"
+    state: present
+    update_cache: yes
+    dpkg_options: 'force-confdef,force-confold'
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  become: yes # <--- Added
+  notify: restart
+
+# 7. Final check to start and enable service
+- name: Ensure MySQL service is running and enabled
+  ansible.builtin.service:
+    name: mysql
+    state: started
+    enabled: yes
+  become: yes # <--- Added
