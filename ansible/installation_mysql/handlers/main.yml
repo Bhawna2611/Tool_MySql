@@ -1,8 +1,0 @@
-
----
-# handlers file for installation_mysql
-- name: restart mysql
-  service:
-    name: "{{ mysql_services[ansible_os_family] }}"
-    state: restarted
-
