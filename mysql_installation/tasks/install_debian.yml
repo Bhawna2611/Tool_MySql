@@ -1,0 +1,72 @@
+---
+# 1. Preparation: Remove any stale apt locks and repository files
+- name: Clean up apt locks and repository files
+  ansible.builtin.shell: |
+    rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock
+    rm -f /etc/apt/sources.list.d/mysql.list /etc/apt/sources.list.d/repo_mysql_com_apt_ubuntu.list
+    dpkg --configure -a
+  become: yes
+  changed_when: false
+
+# 2. Force Purge: Remove existing MySQL packages and all 8.4 dependencies using wildcards
+- name: Completely remove old MySQL and all 8.4 dependencies
+  ansible.builtin.apt:
+    name: 
+      - "mysql-community-*"
+      - "mysql-client*"
+      - "mysql-server*"
+      - "mysql-common"
+      - "libmysqlclient*"
+    state: absent
+    purge: yes
+    autoremove: yes
+  become: yes
+
+# 3. Data Cleanup: Remove data directory to avoid compatibility issues during downgrade
+- name: Remove old data directory for clean downgrade
+  ansible.builtin.file:
+    path: /var/lib/mysql
+    state: absent
+  become: yes
+
+# 4. Repository Setup: Import GPG key and configure the official MySQL 8.0 APT repository
+- name: Import MySQL GPG key
+  ansible.builtin.apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: B7B3B788A8D3785C
+    state: present
+  become: yes
+
+- name: Configure MySQL APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb http://repo.mysql.com/apt/ubuntu {{ ansible_distribution_release }} mysql-8.0"
+    state: present
+    update_cache: yes
+    filename: mysql_ansible_repo
+  become: yes
+
+# 5. Version-Locked Installation: Install all MySQL components locked to the specific version
+- name: Install MySQL components
+  ansible.builtin.apt:
+    name:
+      - "mysql-community-server={{ mysql_version }}*"
+      - "mysql-community-client={{ mysql_version }}*"
+      - "mysql-community-server-core={{ mysql_version }}*"
+      - "mysql-community-client-core={{ mysql_version }}*"
+      - "mysql-community-client-plugins={{ mysql_version }}*"
+      - "mysql-client={{ mysql_version }}*"
+    state: present
+    update_cache: yes
+    dpkg_options: 'force-confdef,force-confold'
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  become: yes
+  notify: restart
+
+# 6. Post-Installation: Ensure the MySQL service is started and enabled on boot
+- name: Ensure MySQL service is running and enabled
+  ansible.builtin.service:
+    name: mysql
+    state: started
+    enabled: yes
+  become: yes

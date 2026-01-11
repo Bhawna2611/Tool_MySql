@@ -1,0 +1,7 @@
+---
+# vars file for mysql_installation
+
+
+#mysql_version: "8.4"   # Allowed 8.0 or 8.4
+#mysql_action: "install"   # install / uninstall / check
+

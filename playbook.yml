@@ -1,0 +1,7 @@
+---
+- name: Execute MySQL Role
+  hosts: local 
+  become: yes
+  gather_facts: yes
+  roles:
+    - mysql_installation

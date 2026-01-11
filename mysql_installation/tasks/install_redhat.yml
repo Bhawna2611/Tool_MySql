@@ -1,0 +1,46 @@
+---
+# 1. Stop existing service to avoid locking
+- name: Stop MySQL service
+  service:
+    name: mysqld
+    state: stopped
+  ignore_errors: yes
+  become: yes
+
+# 2. Aggressively remove all previous repo traces
+- name: Remove any existing MySQL repo files
+  ansible.builtin.shell: "rm -f /etc/yum.repos.d/mysql*.repo"
+  become: yes
+
+# 3. Completely wipe the DNF cache directory
+- name: Clear DNF cache
+  ansible.builtin.shell: "dnf clean all && rm -rf /var/cache/dnf/*"
+  become: yes
+
+# 4. Create the repo file manually
+- name: Create MySQL 8.4 repository file manually
+  ansible.builtin.shell: |
+    cat <<EOF > /etc/yum.repos.d/mysql-community.repo
+    [mysql-84-lts-community]
+    name=MySQL 8.4 LTS Community Server
+    baseurl=https://repo.mysql.com/yum/mysql-8.4-community/el/9/x86_64/
+    enabled=1
+    gpgcheck=0
+    repo_gpgcheck=0
+    EOF
+  become: yes
+
+# 5. Install MySQL Server
+- name: Install MySQL Server packages
+  ansible.builtin.shell: "dnf install -y mysql-community-server --disablerepo='*' --enablerepo='mysql-84-lts-community' --nogpgcheck"
+  become: yes
+  notify: restart
+
+# 6. Ensure MySQL service is started
+- name: Start MySQL service
+  service:
+    name: mysqld
+    state: started
+    enabled: yes
+  ignore_errors: yes
+  become: yes

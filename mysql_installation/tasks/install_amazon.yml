@@ -1,0 +1,14 @@
+---
+- name: Install MySQL Repo
+  yum:
+    name: >
+      {{ 'mysql80-community-release-el7-5.noarch.rpm' if mysql_version == '8.0'
+      else 'mysql84-community-release-el7-1.noarch.rpm' }}
+    state: present
+
+- name: Install MySQL
+  yum:
+    name: mysql-community-server
+    state: present
+  notify: restart mysql
+
