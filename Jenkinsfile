@@ -1,78 +1,46 @@
+@Library('my-shared-library') _
+
 pipeline {
     agent any
-    
+    environment {
+        LC_ALL = 'en_US.UTF-8'
+        LANG   = 'en_US.UTF-8'
+        ANSIBLE_INVENTORY_ENABLED = 'ini'
+    }
     parameters {
-        choice(name: 'ACTION', choices: ['install', 'uninstall', 'check'], description: 'Choose the operation')
-        choice(name: 'VERSION', choices: ['8.0', '8.4'], description: 'Choose the MySQL version')
+        choice(name: 'ACTION', choices: ['install', 'uninstall'], description: 'Select Action')
+        choice(name: 'VERSION', choices: ['8.0', '8.4'], description: 'Select Version')
     }
-
     stages {
-        stage('Initialize & Clean') {
+        stage('Initialize') {
             steps {
-                echo "Cleaning up old workspace..."
-                cleanWs() 
+                // Calling from same file
+                mysqlUtils.checkout('local', 'https://github.com/Bhawna2611/Tool_MySql.git')
             }
         }
-
-        stage('Code Checkout') {
-            steps {
-                echo "Fetching code from GitHub..."
-                // Checkout the 'local' branch from your repository
-                git branch: 'local', url: 'https://github.com/Bhawna2611/Tool_MySql.git'
-            }
-        }
-
-        stage('Ansible Validation') {
+        stage('Verify') {
             parallel {
-                stage('Syntax Check') {
-                    steps {
-                        // Validate Ansible playbook syntax
-                        sh "ansible-playbook -i inventory.ini playbook.yml --syntax-check"
-                    }
+                stage('Lint') {
+                    steps { mysqlUtils.runLint() }
                 }
-                stage('Connectivity Ping') {
-                    steps {
-                        // Check connectivity to localhost defined in inventory.ini
-                        sh "ansible all -i inventory.ini -m ping"
-                    }
+                stage('Ping') {
+                    steps { mysqlUtils.checkPing('inventory.ini') }
                 }
             }
         }
-
-        // --- INPUT APPROVAL STAGE ---
-        stage('Manual Approval') {
+        stage('Scan') {
+            steps { mysqlUtils.sonarScan('MySQL_Project') }
+        }
+        stage('Dry Run') {
             steps {
-                script {
-                    // This pauses the pipeline and waits for a user to click "Proceed"
-                    input message: "Do you want to proceed with MySQL ${params.ACTION} (Version: ${params.VERSION}) on Localhost?", 
-                          ok: "Yes, Deploy Now"
-                }
+                mysqlUtils.ansibleRun(inventory: 'inventory.ini', action: params.ACTION, version: params.VERSION, isDryRun: true)
             }
         }
-
-        stage('Execute MySQL Role') {
+        stage('Deploy') {
+            input { message "Proceed to Deploy?" }
             steps {
-                echo "Executing MySQL Role..."
-                // Running Ansible locally. Note: --private-key is removed for localhost setup.
-                sh """
-                    ansible-playbook -i inventory.ini playbook.yml \
-                    -e "mysql_action=${params.ACTION}" \
-                    -e "mysql_version=${params.VERSION}"
-                """
+                mysqlUtils.ansibleRun(inventory: 'inventory.ini', action: params.ACTION, version: params.VERSION, isDryRun: false)
             }
-        }
-    }
-
-    post {
-        success {
-            mail to: 'bhavna123porwal@gmail.com',
-                 subject: "SUCCESS: MySQL ${params.ACTION} Job #${env.BUILD_NUMBER}",
-                 body: "The MySQL task was completed successfully. View details: ${env.BUILD_URL}"
-        }
-        failure {
-            mail to: 'bhavna123porwal@gmail.com',
-                 subject: "FAILED: MySQL ${params.ACTION} Job #${env.BUILD_NUMBER}",
-                 body: "The MySQL task failed. Please check the logs: ${env.BUILD_URL}"
         }
     }
 }
