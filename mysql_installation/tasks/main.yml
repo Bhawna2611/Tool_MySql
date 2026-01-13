@@ -3,9 +3,9 @@
   ansible.builtin.debug:
     msg: "Performing {{ mysql_action }} operation"
 
-- name: Set remote user dynamically
-  ansible.builtin.set_fact:
-    ansible_user: "{{ 'ubuntu' if ansible_os_family == 'Debian' else 'ec2-user' }}"
+      #- name: Debug ansible_facts
+      #debug:
+      #msg: "{{ ansible_facts }}"
 
 - name: User check
   ansible.builtin.debug:
@@ -17,16 +17,13 @@
   when: mysql_action == "check" or mysql_action == "install"
 
 # 2. INSTALL Logic
-- name: Include Install Tasks
-  when: mysql_action == "install"
-  block:
-    - name: Debian Install
-      include_tasks: install_debian.yml
-      when: ansible_os_family == "Debian"
+- name: Debian Install
+  include_tasks: install_debian.yml
+  when: ansible_os_family == "Debian" && mysql_action == "install"
 
-    - name: RedHat Install
-      include_tasks: install_redhat.yml
-      when: ansible_os_family == "RedHat"
+- name: RedHat Install
+  include_tasks: install_redhat.yml
+  when: ansible_os_family == "Redhat" && mysql_action == "install"
 
 # 3. UNINSTALL Logic
 - name: Include Uninstall Tasks

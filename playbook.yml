@@ -1,6 +1,6 @@
 ---
 - name: Execute MySQL Role
-  hosts: local 
+  hosts: all 
   become: yes
   gather_facts: yes
   roles:
