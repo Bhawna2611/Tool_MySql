@@ -1,46 +1,48 @@
 ---
-# 1. Stop existing service to avoid locking
-- name: Stop MySQL service
-  service:
-    name: mysqld
-    state: stopped
+# 1. Cleanup existing installation (Required to prevent version conflicts)
+- name: Remove existing MySQL packages to allow version change
+  ansible.builtin.dnf:
+    name: 
+      - mysql-community-server
+      - mysql-community-client
+    state: absent
+  become: yes
+
+# 2. MANDATORY: Remove data directory (Required because 8.0 cannot read 8.4 data)
+- name: Remove old data directory for clean version switch
+  ansible.builtin.file:
+    path: /var/lib/mysql
+    state: absent
+  become: yes
   ignore_errors: yes
-  become: yes
 
-# 2. Aggressively remove all previous repo traces
-- name: Remove any existing MySQL repo files
-  ansible.builtin.shell: "rm -f /etc/yum.repos.d/mysql*.repo"
-  become: yes
-
-# 3. Completely wipe the DNF cache directory
+# 3. Clear Metadata and dnf cache
 - name: Clear DNF cache
   ansible.builtin.shell: "dnf clean all && rm -rf /var/cache/dnf/*"
   become: yes
 
-# 4. Create the repo file manually
-- name: Create MySQL 8.4 repository file manually
+# 4. Create Dynamic Repository for the specific version
+- name: Create MySQL repository file for version {{ mysql_version }}
   ansible.builtin.shell: |
     cat <<EOF > /etc/yum.repos.d/mysql-community.repo
-    [mysql-84-lts-community]
-    name=MySQL 8.4 LTS Community Server
-    baseurl=https://repo.mysql.com/yum/mysql-8.4-community/el/9/x86_64/
+    [mysql-community]
+    name=MySQL {{ mysql_version }} Community Server
+    baseurl=https://repo.mysql.com/yum/mysql-{{ mysql_version }}-community/el/9/x86_64/
     enabled=1
     gpgcheck=0
-    repo_gpgcheck=0
     EOF
   become: yes
 
-# 5. Install MySQL Server
+# 5. Install MySQL Server and Notify Handler for restart
 - name: Install MySQL Server packages
-  ansible.builtin.shell: "dnf install -y mysql-community-server --disablerepo='*' --enablerepo='mysql-84-lts-community' --nogpgcheck"
+  ansible.builtin.shell: "dnf install -y mysql-community-server --disablerepo='*' --enablerepo='mysql-community' --nogpgcheck"
   become: yes
   notify: restart
 
-# 6. Ensure MySQL service is started
+# 6. Ensure Service is enabled and started
 - name: Start MySQL service
-  service:
+  ansible.builtin.service:
     name: mysqld
     state: started
     enabled: yes
-  ignore_errors: yes
   become: yes

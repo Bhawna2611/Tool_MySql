@@ -3,36 +3,32 @@
   ansible.builtin.debug:
     msg: "Performing {{ mysql_action }} operation"
 
-      #- name: Debug ansible_facts
-      #debug:
-      #msg: "{{ ansible_facts }}"
-
 - name: User check
   ansible.builtin.debug:
     msg: "Connecting as {{ ansible_user_id }} on {{ ansible_distribution }}"
 
-# 1. CHECK Logic (Hamesha chalega ya sirf check action par)
+# 1. CHECK Logic
 - name: Include Check Logic
   include_tasks: check.yml
   when: mysql_action == "check" or mysql_action == "install"
 
-# 2. INSTALL Logic
+# 2. INSTALL Logic (Replaced && with 'and')
 - name: Debian Install
   include_tasks: install_debian.yml
-  when: ansible_os_family == "Debian" && mysql_action == "install"
+  when: ansible_os_family == "Debian" and mysql_action == "install"
 
 - name: RedHat Install
   include_tasks: install_redhat.yml
-  when: ansible_os_family == "Redhat" && mysql_action == "install"
+  when: ansible_os_family == "RedHat" and mysql_action == "install"
 
 # 3. UNINSTALL Logic
 - name: Include Uninstall Tasks
   when: mysql_action == "uninstall"
   block:
     - name: Debian Uninstall
-      include_tasks: uninstall_debian.yml
+      include_tasks: uninstall.yml
       when: ansible_os_family == "Debian"
 
     - name: RedHat Uninstall
-      include_tasks: uninstall_redhat.yml
+      include_tasks: uninstall.yml
       when: ansible_os_family == "RedHat"
