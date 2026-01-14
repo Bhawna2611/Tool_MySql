@@ -58,3 +58,23 @@ def ansibleRun(Map args) {
         ${checkFlag}
     """
 }
+
+def call(String buildStatus, String emailId) {
+    // Determine color and status message based on build result
+    def statusColor = (buildStatus == 'SUCCESS') ? 'good' : 'danger'
+    def subjectLine = "${buildStatus}: Job ${env.JOB_NAME} Build #${env.BUILD_NUMBER}"
+    def bodyContent = "The build ${buildStatus}. Check details here: ${env.BUILD_URL}"
+
+    // 1. Send Slack Notification
+    slackSend(
+        channel: '#new-channel', 
+        color: statusColor, 
+        message: "${buildStatus}: Job ${env.JOB_NAME} [${env.BUILD_NUMBER}] (${env.BUILD_URL})"
+    )
+
+    // 2. Send Email Notification
+    mail to: emailId,
+         from: 'bhavna123porwal@gmail.com',
+         subject: subjectLine,
+         body: bodyContent
+}
