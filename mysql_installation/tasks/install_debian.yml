@@ -64,5 +64,7 @@
     state: present
     update_cache: yes
     allow_downgrade: yes
+    update_cache: yes  
+    force_apt_get: yes
   become: yes
   notify: restart
