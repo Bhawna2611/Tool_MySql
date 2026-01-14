@@ -6,7 +6,13 @@ pipeline {
     environment {
         LC_ALL = 'en_US.UTF-8'
         LANG   = 'en_US.UTF-8'
-        ANSIBLE_INVENTORY_ENABLED = 'ini'
+        ANSIBLE_INVENTORY_ENABLED = 'ini,aws_ec2,yaml,script' // Ensure dynamic plugins are enabled
+        ANSIBLE_HOST_KEY_CHECKING = 'False' // Prevents pipeline hang on new remote hosts
+        
+        // Define your dynamic inventory file path here
+        INVENTORY_PATH = 'aws_ec2.yml' 
+        // ID of the SSH credentials stored in Jenkins
+        SSH_AUTH_ID    = 'my-server-ssh-key' 
     }
 
     parameters {
@@ -18,8 +24,7 @@ pipeline {
         stage('Initialize') {
             steps {
                 script {
-                    // File name is mysqlTask.groovy, so we use mysqlTask here
-                    mysqlTask.checkout('local', 'https://github.com/Bhawna2611/Tool_MySql.git')
+                    mysqlTask.checkout('main', 'https://github.com/Bhawna2611/Tool_MySql.git')
                 }
             }
         }
@@ -33,7 +38,10 @@ pipeline {
                 }
                 stage('Ping') {
                     steps { 
-                        script { mysqlTask.checkPing('inventory.ini') } 
+                        // Wrap in sshagent to allow remote connectivity
+                        sshagent([env.SSH_AUTH_ID]) {
+                            script { mysqlTask.checkPing(env.INVENTORY_PATH) } 
+                        }
                     }
                 }
             }
@@ -47,27 +55,31 @@ pipeline {
 
         stage('Dry Run') {
             steps {
-                script {
-                    mysqlTask.ansibleRun(
-                        inventory: 'inventory.ini', 
-                        action: params.ACTION, 
-                        version: params.VERSION, 
-                        isDryRun: true
-                    )
+                sshagent([env.SSH_AUTH_ID]) {
+                    script {
+                        mysqlTask.ansibleRun(
+                            inventory: env.INVENTORY_PATH, 
+                            action: params.ACTION, 
+                            version: params.VERSION, 
+                            isDryRun: true
+                        )
+                    }
                 }
             }
         }
 
         stage('Deploy') {
-            input { message "Proceed to Deploy?" }
+            input { message "Proceed to Deploy to Ubuntu/RedHat servers?" }
             steps {
-                script {
-                    mysqlTask.ansibleRun(
-                        inventory: 'inventory.ini', 
-                        action: params.ACTION, 
-                        version: params.VERSION, 
-                        isDryRun: false
-                    )
+                sshagent([env.SSH_AUTH_ID]) {
+                    script {
+                        mysqlTask.ansibleRun(
+                            inventory: env.INVENTORY_PATH, 
+                            action: params.ACTION, 
+                            version: params.VERSION, 
+                            isDryRun: false
+                        )
+                    }
                 }
             }
         }
