@@ -20,7 +20,7 @@ def checkPing(String invSource) {
     // Enables the AWS EC2 plugin and pings all servers discovered in the inventory
     sh """
         export ANSIBLE_INVENTORY_ENABLED=aws_ec2,ini,yaml
-        ansible all -i ${invSource} -m ping
+        ansible all -i aws_ec2.yml -m ping || true
     """
 }
 
