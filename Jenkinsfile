@@ -127,23 +127,24 @@ pipeline {
         }
     }
 
- post {
+post {
         always {
             echo 'Finalizing build report...'
         }
         success {
             script {
-                // custom library steps ko script block me wrap karna zaroori hai
-                notifyStatus('SUCCESS', 'bhavna123porwal@gmail.com')
+                // Sahi naam 'mysqlTask' hai kyunki file ka naam wahi hai
+                mysqlTask('SUCCESS', 'bhavna123porwal@gmail.com')
             }
         }
         failure {
             script {
-                notifyStatus('FAILURE', 'bhavna123porwal@gmail.com')
+                mysqlTask('FAILURE', 'bhavna123porwal@gmail.com')
             }
         }
     }
 }
+
 
 
 
