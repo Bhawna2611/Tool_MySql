@@ -142,8 +142,9 @@ pipeline {
                 notifyStatus('FAILURE', 'bhavna123porwal@gmail.com')
             }
         }
-    }}
+    }
 }
+
 
 
 
