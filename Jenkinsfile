@@ -1,7 +1,7 @@
 @Library('my-shared-library') _
 
 pipeline {
-    agent any
+    agent { label 'built-in' }
     
     environment {
         LC_ALL = 'en_US.UTF-8'
