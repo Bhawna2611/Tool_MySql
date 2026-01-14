@@ -8,3 +8,5 @@ filters:
 keyed_groups:
   - key: tags.Name
     prefix: tag
+compose:
+  ansible_user: "ansible_distribution == 'Ubuntu' | ternary('ubuntu', 'ec2-user')"
