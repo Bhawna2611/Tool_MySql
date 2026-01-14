@@ -27,7 +27,7 @@ pipeline {
 
     // User-defined parameters to select MySQL version and the action to perform
     parameters {
-        choice(name: 'ACTION', choices: ['install', 'uninstall'], description: 'Select Action to perform on MySQL')
+        choice(name: 'ACTION', choices: ['install', 'uninstall', 'check',], description: 'Select Action to perform on MySQL')
         choice(name: 'VERSION', choices: ['8.0', '8.4'], description: 'Select MySQL Version')
     }
 
@@ -119,3 +119,4 @@ pipeline {
         }
     }
 }
+
