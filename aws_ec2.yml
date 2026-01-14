@@ -9,4 +9,4 @@ keyed_groups:
   - key: tags.Name
     prefix: tag
 compose:
-  ansible_user: "ansible_distribution == 'Ubuntu' | ternary('ubuntu', 'ec2-user')"
+ ansible_user: "{{ 'ubuntu' if 'ubuntu' in (tags.Name | default('') | lower) else 'ec2-user' }}"
