@@ -95,6 +95,16 @@ pipeline {
             }
         }
 
+        // Stage: Manual Approval
+        stage('User Approval') {
+            steps {
+                script {
+                    // Ye stage sirf ek button dikhayega
+                    input message: "Kya aap MySQL ${params.ACTION} karna chahte hain?", ok: "Yes, Proceed!"
+                }
+            }
+        }
+
         // Stage 5: Final deployment after manual approval
         stage('Deploy') {
             // Pauses the pipeline and waits for a user to click "Proceed"
@@ -119,4 +129,5 @@ pipeline {
         }
     }
 }
+
 
