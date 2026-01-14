@@ -95,21 +95,19 @@ pipeline {
             }
         }
 
-        // Stage: Manual Approval
+    // Stage: Manual Approval
         stage('User Approval') {
             steps {
                 script {
-                    // Ye stage sirf ek button dikhayega
-                    input message: "Kya aap MySQL ${params.ACTION} karna chahte hain?", ok: "Yes, Proceed!"
+                    // This stage displays a button to pause the pipeline for manual verification
+                    input message: "Do you want to proceed with MySQL ${params.ACTION}?", ok: "Yes, Proceed!"
                 }
             }
         }
 
         // Stage 5: Final deployment after manual approval
         stage('Deploy') {
-            // Pauses the pipeline and waits for a user to click "Proceed"
-            input { message "Proceed to Deploy to Ubuntu/RedHat servers?" }
-            steps {
+                       steps {
                 withCredentials([usernamePassword(credentialsId: env.AWS_CREDS_ID, 
                                  passwordVariable: 'AWS_SECRET_ACCESS_KEY', 
                                  usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
@@ -129,5 +127,6 @@ pipeline {
         }
     }
 }
+
 
 
