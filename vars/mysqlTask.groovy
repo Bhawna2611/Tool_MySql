@@ -10,12 +10,8 @@ def checkout(String branch, String url) {
 
 def runLint() {
     echo "Running Ansible Lint..."
-    // Isko try-catch mein rakhein taaki koi bhi error pipeline na roke
-    try {
-        sh "ansible-lint playbook.yml"
-    } catch (Exception e) {
-        echo "Ansible Lint found violations but continuing pipeline..."
-    }
+   
+    sh "ansible-lint playbook.yml || true"
 }
 
 // Step 3: Server Reachability Test
