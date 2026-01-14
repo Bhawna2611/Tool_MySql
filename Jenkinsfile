@@ -126,7 +126,39 @@ pipeline {
             }
         }
     }
+
+      post {
+        always {
+            // This will run regardless of build status
+            echo 'Finalizing build report...'
+        }
+        success {
+            // Send Slack notification on Success
+            slackSend(channel: '#new-channel', 
+                      color: 'good', 
+                      message: "SUCCESS: Job ${env.JOB_NAME} [${env.BUILD_NUMBER}] (${env.BUILD_URL})")
+            
+            // Send Email notification on Success
+            mail to: 'bhavna123porwal@gmail.com',
+                 from: 'bhavna123porwal@gmail.com',
+                 subject: "Success: ${env.JOB_NAME} Build #${env.BUILD_NUMBER}",
+                 body: "Check details at ${env.BUILD_URL}"
+        }
+        failure {
+            // Send Slack notification on Failure
+            slackSend(channel: '#new-channel', 
+                      color: 'danger', 
+                      message: "FAILED: Job ${env.JOB_NAME} [${env.BUILD_NUMBER}] (${env.BUILD_URL})")
+            
+            // Send Email notification on Failure
+            mail to: 'bhavna123porwal@gmail.com',
+                 from: 'bhavna123porwal@gmail.com',
+                 subject: "FAILURE: ${env.JOB_NAME} Build #${env.BUILD_NUMBER}",
+                 body: "The build failed. Please check the logs at ${env.BUILD_URL}"
+        }
+    }
 }
+
 
 
 
