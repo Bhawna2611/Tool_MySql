@@ -127,20 +127,24 @@ pipeline {
         }
     }
 
-    post {
+ post {
         always {
             echo 'Finalizing build report...'
         }
         success {
-            // Calling the shared library function
-            notifyStatus('SUCCESS', 'bhavna123porwal@gmail.com')
+            script {
+                // custom library steps ko script block me wrap karna zaroori hai
+                notifyStatus('SUCCESS', 'bhavna123porwal@gmail.com')
+            }
         }
         failure {
-            // Calling the shared library function
-            notifyStatus('FAILURE', 'bhavna123porwal@gmail.com')
+            script {
+                notifyStatus('FAILURE', 'bhavna123porwal@gmail.com')
+            }
         }
-    }
+    }}
 }
+
 
 
 
