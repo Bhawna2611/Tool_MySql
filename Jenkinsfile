@@ -37,7 +37,7 @@ pipeline {
             steps {
                 script {
                     // Uses shared library to clone the repository
-                    mysqlTask.checkout('main', 'https://github.com/Bhawna2611/Tool_MySql.git')
+                    mysqlTask.checkout('local', 'https://github.com/Bhawna2611/Tool_MySql.git')
                 }
             }
         }
