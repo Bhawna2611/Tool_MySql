@@ -1,4 +1,11 @@
 ---
+
+- name: Remove old plugins
+  apt:
+    name: mysql-community-client-plugins
+    state: absent
+  become: true
+
 # 1. Purane locks aur repo saaf karo
 - name: Clean up apt locks and repository files
   ansible.builtin.shell: |
