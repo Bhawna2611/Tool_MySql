@@ -7,11 +7,15 @@ def checkout(String branch, String url) {
 }
 
 // Step 2: Static Code Analysis for Ansible
+
 def runLint() {
     echo "Running Ansible Lint..."
-    // Validates the playbook against best practices. 
-    // '|| true' ensures the pipeline continues even if minor linting violations are found.
-    sh "ansible-lint playbook.yml || true"
+    // Isko try-catch mein rakhein taaki koi bhi error pipeline na roke
+    try {
+        sh "ansible-lint playbook.yml"
+    } catch (Exception e) {
+        echo "Ansible Lint found violations but continuing pipeline..."
+    }
 }
 
 // Step 3: Server Reachability Test
